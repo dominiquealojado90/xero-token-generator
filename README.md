@@ -16,6 +16,11 @@ cd C:\Users\Developer\Desktop\tools\xero-connector
 powershell -ExecutionPolicy Bypass -File .\scripts\get-xero-token.ps1
 ```
 
+Default scopes:
+- `openid profile email offline_access accounting.transactions accounting.transactions.read accounting.invoices accounting.invoices.read accounting.payments accounting.payments.read accounting.banktransactions accounting.banktransactions.read accounting.manualjournals accounting.manualjournals.read accounting.reports.read accounting.reports.aged.read accounting.reports.balancesheet.read accounting.reports.profitandloss.read accounting.reports.trialbalance.read accounting.contacts accounting.settings payroll.settings payroll.employees payroll.timesheets`
+- You can still choose your own scopes when running the script with `-Scopes "..."`
+- Scope compatibility note: some scopes are deprecated or app-type dependent. If you get `invalid_scope`, remove unsupported scopes for your app in Xero Developer settings (notably around the March 2, 2026 to April 2026 migration period).
+
 What it does:
 - asks for Client ID and Client Secret
 - uses default callback URL: `http://localhost:8080/callback` (you can choose a different callback URL)

@@ -2,7 +2,7 @@
   [string]$ClientId,
   [string]$ClientSecret,
   [string]$RedirectUri = "http://localhost:8080/callback",
-  [string]$Scopes = "openid profile email offline_access accounting.settings accounting.contacts"
+  [string]$Scopes = "openid profile email offline_access accounting.transactions accounting.transactions.read accounting.invoices accounting.invoices.read accounting.payments accounting.payments.read accounting.banktransactions accounting.banktransactions.read accounting.manualjournals accounting.manualjournals.read accounting.reports.read accounting.reports.aged.read accounting.reports.balancesheet.read accounting.reports.profitandloss.read accounting.reports.trialbalance.read accounting.contacts accounting.settings payroll.settings payroll.employees payroll.timesheets"
 )
 
 $ErrorActionPreference = "Stop"
