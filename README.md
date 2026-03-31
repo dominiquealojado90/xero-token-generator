@@ -16,6 +16,13 @@ cd C:\Users\Developer\Desktop\tools\xero-connector
 powershell -ExecutionPolicy Bypass -File .\scripts\get-xero-token.ps1
 ```
 
+For separate company profiles:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\get-xero-token.ps1 -Profile company-a
+powershell -ExecutionPolicy Bypass -File .\scripts\get-xero-token.ps1 -Profile company-b
+```
+
 Default scopes:
 - `offline_access accounting.invoices accounting.invoices.read accounting.payments accounting.payments.read accounting.banktransactions accounting.banktransactions.read accounting.manualjournals accounting.manualjournals.read accounting.reports.aged.read accounting.reports.balancesheet.read accounting.reports.profitandloss.read accounting.reports.trialbalance.read accounting.contacts accounting.settings`
 - You can still choose your own scopes when running the script with `-Scopes "..."`
@@ -85,6 +92,7 @@ What it does:
 - prints:
   - `access_token` (use as `XERO_CLIENT_BEARER_TOKEN`)
   - `refresh_token`
+- saves latest tokens to `.\xero-tokens.json`
 
 Note: If browser shows `localhost:8080 can't connect`, that is normal.  
 Just copy the full URL from address bar and paste into PowerShell.
@@ -94,6 +102,25 @@ Just copy the full URL from address bar and paste into PowerShell.
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\refresh-xero-token.ps1
 ```
+
+User-friendly mode (auto refresh every 25 minutes):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\refresh-xero-token.ps1 -Loop
+```
+
+Company profile examples:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\refresh-xero-token.ps1 -Profile company-a -Loop
+powershell -ExecutionPolicy Bypass -File .\scripts\refresh-xero-token.ps1 -Profile company-b -Loop
+```
+
+Notes:
+- `refresh-xero-token.ps1` will auto-read `refresh_token` from `.\xero-tokens.json` if available.
+- Every successful refresh updates `.\xero-tokens.json` with newest access/refresh tokens.
+- You can change interval with `-LoopMinutes`, example: `-LoopMinutes 20`.
+- If `-Profile` is not `default`, token file becomes `.\xero-tokens.<profile>.json`.
 
 ## 3) List Connected Organisations
 
@@ -115,7 +142,70 @@ Menu options:
 
 If one token can access multiple orgs, list orgs first, then choose the correct `tenantId` for your app config.
 
+For two companies, recommended approach:
+- Keep one token file per company using `-Profile` (example `company-a`, `company-b`).
+- Keep separate Claude MCP entries so you can switch quickly.
+
 ## Security
 
 - Never share `client_secret`, `access_token`, or `refresh_token`.
 - If exposed, rotate secrets/tokens immediately in Xero Developer settings.
+
+## Claude Desktop (No Manual Paste)
+
+Claude config cannot directly map JSON fields from `xero-tokens.json` into env vars.
+Use the launcher script below so Claude starts Xero MCP with the latest saved token.
+
+1) In Claude config file (`claude_desktop_config.json`), add:
+
+```json
+{
+  "mcpServers": {
+    "xero": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\Developer\\Desktop\\tools\\xero-connector\\scripts\\run-xero-mcp-from-token.mjs"
+      ]
+    }
+  }
+}
+```
+
+For two-company setup, use two servers:
+
+```json
+{
+  "mcpServers": {
+    "xero_company_a": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\Developer\\Desktop\\tools\\xero-connector\\scripts\\run-xero-mcp-from-token.mjs",
+        "--profile",
+        "company-a"
+      ]
+    },
+    "xero_company_b": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\Developer\\Desktop\\tools\\xero-connector\\scripts\\run-xero-mcp-from-token.mjs",
+        "--profile",
+        "company-b"
+      ]
+    }
+  }
+}
+```
+
+Auto-refresh behavior on startup:
+- The launcher reads `access_token` from the selected token file.
+- Use `refresh-xero-token.ps1` regularly (or `-Loop`) to keep token files fresh.
+
+2) Restart Claude Desktop.
+
+3) Whenever token changes, refresh first:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\refresh-xero-token.ps1
+```
+
+Then restart Claude so MCP restarts with the latest token.

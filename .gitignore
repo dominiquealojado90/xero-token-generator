@@ -1,0 +1,8 @@
+xero-tokens.json
+xero-tokens.company-a.json
+xero-tokens.company-b.json
+xero-tokens.*.json
+node_modules/
+.npm-cache/
+_update-notifier-last-checked
+npm-debug.log*
